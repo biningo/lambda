@@ -1,6 +1,7 @@
 package lambda
 
 import (
+	"log"
 	"strings"
 )
 
@@ -16,11 +17,6 @@ type node struct {
 	isWild   bool
 	children []*node
 	handlers HandlersChain
-}
-
-type Param struct {
-	Key string
-	Val string
 }
 
 //每个HTTP方法都有一棵树
@@ -53,6 +49,7 @@ func (n *node) addRoute(fullPath string, handlers HandlersChain) {
 	}
 	cur.fullPath = fullPath
 	cur.handlers = handlers
+	log.Println("add ", fullPath)
 }
 
 func (n *node) getNode(fullPath string) *node {
@@ -71,25 +68,22 @@ func (n *node) getNode(fullPath string) *node {
 			return nil
 		}
 	}
-	if cur.fullPath == fullPath {
-		return cur
-	}
-	return nil
+	return cur
 }
 
-func (n *node) getHandlers(fullPath string) (HandlersChain, []Param) {
+func (n *node) getHandlers(fullPath string) (HandlersChain, map[string]string) {
 	fullPath = cleanPath(fullPath)
 	node := n.getNode(fullPath)
 	if node == nil {
-		return HandlersChain{}, []Param{}
+		return HandlersChain{}, nil
 	}
 	patternPath := node.fullPath
-	params := []Param{}
+	params := make(map[string]string)
 	parts := strings.Split(patternPath, "/")[1:]
 	pathParts := strings.Split(fullPath, "/")[1:]
 	for index, part := range parts {
 		if part[0] == ':' {
-			params = append(params, Param{Key: part[1:], Val: pathParts[index]})
+			params[part[1:]] = pathParts[index]
 		}
 	}
 	return node.handlers, params
