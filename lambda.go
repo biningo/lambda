@@ -13,6 +13,7 @@ import (
 type HandlerFunc func(*Context)
 type HandlersChain []HandlerFunc
 type methodTrees []methodTree
+type H map[string]interface{}
 type Engine struct {
 	RouterGroup
 	trees       methodTrees //每种HTTP请求方法都会有一颗trie树
@@ -40,6 +41,10 @@ func New() *Engine {
 		return &Context{engine: engine}
 	}
 	return engine
+}
+
+func (engine *Engine) Run(addr string) error {
+	return http.ListenAndServe(addr, engine)
 }
 
 func (engine *Engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
